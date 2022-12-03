@@ -7,36 +7,53 @@
 
 import UIKit
 
-class ContactTableViewController: UITableViewController {
+class ContactTableViewController: UITableViewController, UISearchResultsUpdating {
+    func updateSearchResults(for searchController: UISearchController) {
+        let searchBar = searchController.searchBar
+        let scopeButton = searchBar.scopeButtonTitles![searchBar.selectedScopeButtonIndex]
+        let searchText = searchBar.text!
+        
+        //filterForSearchTextAndScopeButton(searchText, scopeButton)
+    }
+    
+    /*func filterForSearchTextAndScopeButton(searchText: String, scopeButton: String = "All"){
+        filteredContacts = contactsData.filter {
+            Contact in
+            let scopeMatch = (scopeButton = "All" || Contact.first_name)
+        }
+    }*/
+    
     
     var contactsData = [Contact]()
-    let searchController = UISearchController(searchResultsController: nil)
+    let searchController = UISearchController()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        searchController.delegate = self
+        initSearchController()
+        
+        /*searchController.delegate = self
         searchController.searchBar.delegate = self
         self.navigationItem.searchController = searchController
         self.navigationItem.searchController?.searchBar.placeholder = "search".localizedCapitalized
         //self.navigationItem.searchController?.dimsBackgroundDuringPresentation = false
-        self.navigationItem.hidesSearchBarWhenScrolling = false
+        self.navigationItem.hidesSearchBarWhenScrolling = false*/
+    }
+    
+    func initSearchController() {
+        searchController.loadViewIfNeeded()
+        searchController.searchResultsUpdater = self
+        searchController.obscuresBackgroundDuringPresentation = false
+        searchController.searchBar.enablesReturnKeyAutomatically = false
+        searchController.searchBar.returnKeyType = UIReturnKeyType.done
+        definesPresentationContext = true
         
-        /*Networking.makeHTTPRequest(
-            completion: { data in
-                self.contactsData = data
-                DispatchQueue.main.async {
-                    self.tableView.reloadData()
-                }
-            },
-            endpoint: "/contacts"
-        )*/
-
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem
+        navigationItem.searchController = searchController
+        navigationItem.hidesSearchBarWhenScrolling = false
+        
+        searchController.searchBar.scopeButtonTitles = ["All", "Male", "Female"]
+        
+        searchController.searchBar.delegate = self
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -80,6 +97,29 @@ class ContactTableViewController: UITableViewController {
         cell.titleLabel.text = contact.phone_number
 
         return cell
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if let vc = storyboard?.instantiateViewController(identifier: "DetallesViewController") as? DetallesViewController {
+            let contactDetail = contactsData[indexPath.row]
+            
+            guard let cell = tableView.cellForRow(at: indexPath) as? ContactTableViewCell
+                 else{
+                   return
+                 }
+            
+            vc.imgProfile = cell.portraitImageView.image!
+            vc.detailName = contactDetail.first_name
+            vc.detailEmail = contactDetail.email
+            vc.detailTelefono = contactDetail.phone_number
+            vc.detailEdad = contactDetail.age
+            vc.detailRfc = contactDetail.rfc
+            vc.detailDob = contactDetail.dob
+            vc.detailGender = contactDetail.gender
+            vc.detailDegree = contactDetail.academic_degree
+            
+            self.navigationController?.pushViewController(vc, animated: true)
+        }
     }
 }
 
